@@ -1,4 +1,4 @@
-// src/pages/CoursesPage.js
+
 import React, { useEffect, useState } from 'react'
 import { courseApi, prepodApi } from '../api/api'
 
