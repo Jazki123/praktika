@@ -59,7 +59,7 @@ export default function ReviewsPage() {
     }
   }
 
-  // отфильтрованный список курсов по выбранному преподавателю
+ 
   const filteredCourses = selPrep
     ? courses.filter(c => c.prepodId === Number(selPrep))
     : courses
@@ -92,7 +92,7 @@ export default function ReviewsPage() {
           value={selPrep}
           onChange={e =>{
             setSelPrep(e.target.value)
-            setSelCour('') // сброс курса при смене преподавателя
+            setSelCour('') 
           }}
           style={{ marginLeft: 8 }}
         >
