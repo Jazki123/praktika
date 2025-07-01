@@ -1,6 +1,14 @@
-// src/pages/CoursesPage.js
 import React, { useEffect, useState } from 'react'
 import { courseApi, prepodApi } from '../api/api'
+import './CoursesPage.css'
+
+
+function getPageItems(currentPage, totalPages) {
+  if (totalPages <= 6) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
+  }
+  return [1, 2, 3, '...', totalPages]
+}
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([])
@@ -8,8 +16,6 @@ export default function CoursesPage() {
   const [facult, setFacult] = useState('')
   const [prepods, setPrepods] = useState([])
   const [selectedPrepod, setSelectedPrepod] = useState('')
-
- 
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
@@ -21,7 +27,7 @@ export default function CoursesPage() {
     try {
       const [cRes, pRes] = await Promise.all([
         courseApi.list(),
-        prepodApi.list()
+        prepodApi.list(),
       ])
       setCourses(cRes.data)
       setPrepods(pRes.data)
@@ -35,7 +41,7 @@ export default function CoursesPage() {
       await courseApi.create({
         title,
         facult,
-        prepodId: Number(selectedPrepod)
+        prepodId: Number(selectedPrepod),
       })
       setTitle('')
       setFacult('')
@@ -46,7 +52,7 @@ export default function CoursesPage() {
     }
   }
 
-  const del = async id => {
+  const del = async (id) => {
     try {
       await courseApi.remove(id)
       loadAll()
@@ -55,32 +61,42 @@ export default function CoursesPage() {
     }
   }
 
+  
+  const filtered = selectedPrepod
+    ? courses.filter((c) => c.prepodId === Number(selectedPrepod))
+    : courses
 
-  const totalPages = Math.ceil(courses.length / itemsPerPage)
+ 
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const currentItems = courses.slice(startIndex, startIndex + itemsPerPage)
+  const currentItems = filtered.slice(startIndex, startIndex + itemsPerPage)
+  const pages = getPageItems(currentPage, totalPages)
+
+  
+  const goPrev = () => setCurrentPage((p) => Math.max(p - 1, 1))
+  const goNext = () => setCurrentPage((p) => Math.min(p + 1, totalPages))
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Курсы</h2>
+    <div className="courses-container">
+      <h2 className="courses-header">Курсы</h2>
 
-      <div style={{ marginBottom: 20 }}>
+      <div className="courses-form">
         <input
           placeholder="Название"
           value={title}
-          onChange={e => setTitle(e.target.value)}
+          onChange={(e) => setTitle(e.target.value)}
         />
         <input
           placeholder="Факультет"
           value={facult}
-          onChange={e => setFacult(e.target.value)}
+          onChange={(e) => setFacult(e.target.value)}
         />
         <select
           value={selectedPrepod}
-          onChange={e => setSelectedPrepod(e.target.value)}
+          onChange={(e) => setSelectedPrepod(e.target.value)}
         >
           <option value="">Преподаватель</option>
-          {prepods.map(p => (
+          {prepods.map((p) => (
             <option key={p.id} value={p.id}>
               {p.fio}
             </option>
@@ -89,45 +105,33 @@ export default function CoursesPage() {
         <button onClick={add}>Добавить</button>
       </div>
 
-      <ul>
-        {currentItems.map(c => (
-          <li key={c.id} style={{ marginBottom: 8 }}>
-            {c.title} ({c.facult}) — prepodId: {c.prepodId}
-            <button
-              style={{ marginLeft: 10 }}
-              onClick={() => del(c.id)}
-            >
-              Удалить
-            </button>
+      <ul className="courses-list">
+        {currentItems.map((c) => (
+          <li key={c.id} className="courses-list-item">
+            <span>
+              {c.title} ({c.facult})
+            </span>
+            <span>prepodId: {c.prepodId}</span>
+            <button onClick={() => del(c.id)}>Удалить</button>
           </li>
         ))}
       </ul>
 
-      <div style={{ marginTop: 20 }}>
-        <button
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
+      <div className="pagination">
+        <button onClick={goPrev} disabled={currentPage === 1}>
           Prev
         </button>
-
-        {[...Array(totalPages)].map((_, i) => (
+        {pages.map((p, idx) => (
           <button
-            key={i + 1}
-            onClick={() => setCurrentPage(i + 1)}
-            disabled={currentPage === i + 1}
-            style={{ margin: '0 4px' }}
+            key={idx}
+            onClick={() => typeof p === 'number' && setCurrentPage(p)}
+            disabled={p === '...' || currentPage === p}
+            className={currentPage === p ? 'active' : ''}
           >
-            {i + 1}
+            {p}
           </button>
         ))}
-
-        <button
-          onClick={() =>
-            setCurrentPage(prev => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-        >
+        <button onClick={goNext} disabled={currentPage === totalPages}>
           Next
         </button>
       </div>
